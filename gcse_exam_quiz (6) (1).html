@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OCR GCSE Maths — Exam Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1230;
+    --cream: #faf6ef;
+    --gold: #d4892a;
+    --gold-light: #f7c87a;
+    --gold-pale: #fef6e8;
+    --rose: #c94f6d;
+    --rose-pale: #fde8ee;
+    --teal: #2a7d72;
+    --teal-pale: #d4eeeb;
+    --sky: #3a7bd5;
+    --sky-pale: #ddeeff;
+    --purple-pale: #f0ebff;
+    --border: #ede8f5;
+    --muted: #9b8fa8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image:
+      radial-gradient(ellipse at 10% 15%, rgba(212,137,42,0.10) 0%, transparent 45%),
+      radial-gradient(ellipse at 90% 85%, rgba(42,125,114,0.09) 0%, transparent 45%),
+      radial-gradient(ellipse at 88% 12%, rgba(201,79,109,0.07) 0%, transparent 38%),
+      radial-gradient(ellipse at 5% 90%, rgba(58,123,213,0.06) 0%, transparent 35%);
+    pointer-events: none;
+  }
+
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 0;
+    background-image: radial-gradient(circle, rgba(26,18,48,0.05) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  #app {
+    position: relative; z-index: 1;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 60px;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    width: 100%; max-width: 700px;
+    text-align: center;
+    margin-bottom: 28px;
+    animation: fadeDown 0.7s ease both;
+  }
+  .ocr-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--ink); color: white;
+    font-size: 11px; font-weight: 700; letter-spacing: 2px;
+    text-transform: uppercase; border-radius: 999px;
+    padding: 6px 18px; margin-bottom: 16px;
+  }
+  .ocr-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold-light); }
+  .site-header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(30px, 6vw, 50px);
+    font-weight: 900; color: var(--ink);
+    line-height: 1.08; margin-bottom: 12px;
+  }
+  .site-header h1 em { color: var(--gold); font-style: italic; }
+  .site-header .subtitle {
+    font-size: 16px; color: #6b5e7a; line-height: 1.65;
+    max-width: 460px; margin: 0 auto;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    width: 100%; max-width: 700px;
+    margin-bottom: 18px;
+    animation: fadeDown 0.7s 0.1s ease both;
+  }
+  .progress-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    margin-bottom: 8px;
+  }
+  .score-pill {
+    background: var(--gold-pale); color: var(--gold);
+    border-radius: 999px; padding: 4px 14px; font-size: 12px; font-weight: 700;
+  }
+  .progress-track {
+    background: #e8e0f0; border-radius: 999px; height: 8px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 999px;
+    background: linear-gradient(90deg, var(--gold), var(--rose));
+    transition: width 0.55s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── CARD ── */
+  .card {
+    width: 100%; max-width: 700px;
+    background: white;
+    border-radius: 32px;
+    padding: 44px 44px 38px;
+    box-shadow:
+      0 2px 0 #ddd5ea,
+      0 20px 60px rgba(26,18,48,0.11);
+    animation: cardIn 0.5s cubic-bezier(.4,0,.2,1) both;
+    position: relative; overflow: hidden;
+  }
+  .card-stripe {
+    position: absolute; top: 0; left: 0; right: 0; height: 6px;
+    background: linear-gradient(90deg, var(--gold) 0%, var(--rose) 50%, var(--teal) 100%);
+  }
+
+  .q-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--gold);
+    background: var(--gold-pale); border-radius: 999px;
+    padding: 7px 18px; margin-bottom: 26px;
+  }
+
+  .question-text {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(22px, 3.8vw, 30px);
+    font-weight: 700; color: var(--ink);
+    line-height: 1.32; margin-bottom: 28px;
+  }
+
+  /* ── INFO BLOCK ── */
+  .info-block {
+    background: linear-gradient(135deg, #fef9f2 0%, #fff4f8 100%);
+    border: 1.5px solid #f0e0cc;
+    border-radius: 18px; padding: 20px 22px;
+    margin-bottom: 28px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .info-row { display: flex; align-items: flex-start; gap: 14px; }
+  .info-icon {
+    width: 40px; height: 40px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0;
+  }
+  .info-text { font-size: 15px; font-weight: 500; color: var(--ink); line-height: 1.5; padding-top: 8px; }
+  .info-text strong { color: var(--gold); font-weight: 700; }
+
+  /* Exam dates table */
+  .exam-table { width: 100%; border-collapse: collapse; border-radius: 14px; overflow: hidden; }
+  .exam-table th {
+    background: var(--ink); color: white;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 11px 14px; text-align: left;
+  }
+  .exam-table td { padding: 13px 14px; font-size: 14px; font-weight: 500; border-bottom: 1px solid #f0eaf8; }
+  .exam-table tr:last-child td { border-bottom: none; }
+  .exam-table tr:nth-child(odd) td { background: #faf8fd; }
+  .exam-table tr:nth-child(even) td { background: white; }
+  .exam-badge {
+    display: inline-block; background: var(--gold-light);
+    color: #7a4a00; font-size: 11px; font-weight: 700;
+    border-radius: 999px; padding: 3px 11px;
+  }
+  .calc-yes { display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:#d4eeeb;color:#1a4a45; }
+  .calc-no  { display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;background:#fde8ee;color:#6a1a30; }
+
+  /* ── OPTIONS ── */
+  .options { display: flex; flex-direction: column; gap: 13px; margin-bottom: 26px; }
+  .opt {
+    display: flex; align-items: center; gap: 18px;
+    border: 2px solid var(--border);
+    border-radius: 18px; padding: 19px 24px;
+    cursor: pointer; background: white;
+    transition: all 0.18s ease;
+    font-family: 'DM Sans', sans-serif; text-align: left;
+    width: 100%; font-size: 17px; font-weight: 500; color: var(--ink);
+  }
+  .opt:hover:not(:disabled) {
+    border-color: var(--gold);
+    background: var(--gold-pale);
+    transform: translateX(5px);
+    box-shadow: 0 5px 22px rgba(212,137,42,0.13);
+  }
+  .opt-letter {
+    width: 38px; height: 38px; border-radius: 11px; flex-shrink: 0;
+    background: var(--purple-pale); color: #6a4a9a;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800;
+    transition: all 0.18s;
+  }
+  .opt:hover:not(:disabled) .opt-letter { background: var(--gold-light); color: #7a4a00; }
+
+  .opt.selected { border-color: var(--sky); background: var(--sky-pale); }
+  .opt.selected .opt-letter { background: var(--sky); color: white; }
+
+  .opt.correct { border-color: var(--teal); background: var(--teal-pale); }
+  .opt.correct .opt-letter { background: var(--teal); color: white; }
+
+  .opt.wrong { border-color: var(--rose); background: var(--rose-pale); }
+  .opt.wrong .opt-letter { background: var(--rose); color: white; }
+
+  /* ── FEEDBACK ── */
+  .feedback {
+    border-radius: 18px; padding: 22px 24px;
+    display: flex; gap: 18px; align-items: flex-start;
+    margin-bottom: 24px; animation: feedbackIn 0.35s ease both;
+  }
+  .feedback.correct { background: var(--teal-pale); border: 1.5px solid #a8d8d3; }
+  .feedback.wrong   { background: var(--rose-pale);  border: 1.5px solid #f0b8c8; }
+  .feedback-emoji { font-size: 34px; flex-shrink: 0; line-height: 1; margin-top: 3px; }
+  .feedback-title {
+    font-family: 'Fraunces', serif;
+    font-size: 19px; font-weight: 700; margin-bottom: 7px;
+  }
+  .feedback.correct .feedback-title { color: var(--teal); }
+  .feedback.wrong   .feedback-title { color: var(--rose); }
+  .feedback-body { font-size: 15px; line-height: 1.65; color: #3a2d4a; }
+
+  /* ── BUTTONS ── */
+  .btn-row { display: flex; gap: 12px; }
+  .btn-primary {
+    flex: 1; padding: 18px 28px;
+    background: linear-gradient(135deg, var(--ink) 0%, #2d1f4a 100%);
+    color: white; border: none; border-radius: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 5px 0 #0d0818;
+  }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 7px 0 #0d0818; }
+  .btn-primary:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 #0d0818; }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+  .btn-gold {
+    flex: 1; padding: 18px 28px;
+    background: linear-gradient(135deg, var(--gold) 0%, #bf7018 100%);
+    color: white; border: none; border-radius: 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px; font-weight: 700;
+    cursor: pointer; transition: all 0.2s;
+    box-shadow: 0 5px 0 #7a4500;
+  }
+  .btn-gold:hover { transform: translateY(-2px); box-shadow: 0 7px 0 #7a4500; }
+  .btn-gold:active { transform: translateY(2px); box-shadow: 0 2px 0 #7a4500; }
+
+  /* ── RESULTS ── */
+  .results-card {
+    width: 100%; max-width: 700px;
+    background: white; border-radius: 32px;
+    padding: 50px 44px;
+    box-shadow: 0 2px 0 #ddd5ea, 0 20px 60px rgba(26,18,48,0.11);
+    text-align: center;
+    animation: cardIn 0.5s ease both;
+    position: relative; overflow: hidden;
+  }
+  .results-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 6px;
+    background: linear-gradient(90deg, var(--gold), var(--rose), var(--teal));
+  }
+  .results-emoji { font-size: 80px; margin-bottom: 16px; line-height: 1; }
+  .results-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 5vw, 44px); font-weight: 900; color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .results-subtitle {
+    font-size: 16px; color: #7b6a8d; margin-bottom: 32px;
+    line-height: 1.65; max-width: 480px; margin-left: auto; margin-right: auto;
+  }
+  .score-ring-wrap { display: flex; justify-content: center; margin-bottom: 32px; }
+  .score-ring { position: relative; width: 155px; height: 155px; }
+  .score-ring svg { transform: rotate(-90deg); }
+  .score-ring-text {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .score-ring-num {
+    font-family: 'Fraunces', serif;
+    font-size: 40px; font-weight: 900; color: var(--ink); line-height: 1;
+  }
+  .score-ring-label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  .cheatsheet {
+    background: linear-gradient(135deg, #fef9f0 0%, #f6f0ff 100%);
+    border-radius: 22px; padding: 28px;
+    margin: 24px 0; text-align: left;
+    border: 1.5px solid #ede5ff;
+  }
+  .cheatsheet-title {
+    font-family: 'Fraunces', serif;
+    font-size: 20px; font-weight: 700; color: var(--ink);
+    margin-bottom: 20px; text-align: center;
+  }
+  .cheat-row {
+    display: flex; align-items: flex-start; gap: 16px;
+    padding: 13px 0; border-bottom: 1px solid #ede8f5;
+  }
+  .cheat-row:last-child { border-bottom: none; }
+  .cheat-icon {
+    width: 40px; height: 40px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0; margin-top: 1px;
+  }
+  .cheat-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .cheat-value { font-size: 15px; font-weight: 600; color: var(--ink); line-height: 1.5; }
+
+  .review-list { text-align: left; margin-bottom: 28px; }
+  .review-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 16px; border-radius: 12px; margin-bottom: 7px;
+    font-size: 14px; font-weight: 500;
+  }
+  .review-item.ok   { background: var(--teal-pale); color: #1a4a45; }
+  .review-item.fail { background: var(--rose-pale);  color: #6a1a30; }
+  .review-icon { font-size: 18px; flex-shrink: 0; }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(28px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes feedbackIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── MOTIVATION BANNER ── */
+  .motivation-banner {
+    background: linear-gradient(135deg, #1a1230 0%, #2d1f4a 100%);
+    border-radius: 18px; padding: 18px 22px;
+    margin-bottom: 28px;
+    display: flex; gap: 14px; align-items: flex-start;
+    animation: feedbackIn 0.4s ease both;
+  }
+  .motivation-quote {
+    font-family: 'Fraunces', serif;
+    font-size: 15px; font-style: italic;
+    color: #f7c87a; line-height: 1.6;
+  }
+  .motivation-icon { font-size: 26px; flex-shrink: 0; margin-top: 2px; }
+
+  @media (max-width: 520px) {
+    .card, .results-card { padding: 28px 22px; }
+    .question-text { font-size: 20px; }
+    .opt { font-size: 15px; padding: 16px 18px; gap: 14px; }
+    .info-block { padding: 16px; }
+    .cheatsheet { padding: 20px 18px; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+const questions = [
+  {
+    id: 2,
+    question: "How many maths exams do you have in total this year?",
+    info: null,
+    options: ["One exam — just the main one", "Two exams", "Three exams", "It depends how I feel on the day"],
+    answer: 2,
+    emoji: "📋",
+    correctMsg: "Correct — you have THREE exams! 14 May, 3 June, and 10 June. All three must be attended. Write them in your diary today!",
+    wrongMsg: "You have THREE exams: 14 May, 3 June, and 10 June. All three count — all three must be attended.",
+  },
+  {
+    id: 4,
+    question: "When is your FIRST maths exam?",
+    info: { type: "dates" },
+    options: ["3 June", "10 June", "14 May", "21 May"],
+    answer: 2,
+    emoji: "📅",
+    correctMsg: "Yes! Your first exam is 14 May — and it's a calculator paper. Bring your calculator and aim to arrive by 9:00am. Invigilators will take students in at 9:15am.",
+    wrongMsg: "Your first exam is 14 May. It's also a calculator paper — remember to bring yours!",
+  },
+  {
+    id: 5,
+    question: "What time do ALL three exams start?",
+    info: null,
+    options: ["10:00am", "9:30am", "9:00am", "8:45am"],
+    answer: 1,
+    emoji: "⏰",
+    correctMsg: "All three exams start at 9:30am sharp. Aim to arrive by 9:00am — invigilators will take students in at 9:15am, so you'll have time to settle in calmly.",
+    wrongMsg: "All three exams start at 9:30am. Set your alarm and plan to arrive by 9:00am — invigilators take students in at 9:15am.",
+  },
+  {
+    id: 8,
+    question: "You wake up on exam morning with a headache. What should you do?",
+    info: null,
+    options: [
+      "Stay in bed — I can sit it another time",
+      "Text my tutor and wait for a reply before deciding",
+      "Take a painkiller, have some water, and go to the exam",
+      "Wait until lunchtime to see how I feel"
+    ],
+    answer: 2,
+    emoji: "🤒",
+    correctMsg: "Brilliant! A headache is not a reason to miss your exam. Take a painkiller, drink some water, and get yourself there. You are stronger than you think!",
+    wrongMsg: "The answer is: take a painkiller and go. A headache does not have to stop you. The exam will not be rescheduled — you must attend.",
+  },
+  {
+    id: 9,
+    question: '"I\'m not feeling ready yet — I\'d rather not sit the exam until I feel more prepared." Is skipping an option?',
+    info: null,
+    options: [
+      "Yes — I will sit it next year when I am ready",
+      "No — I must attend all three exams regardless",
+      "Maybe — if I speak to my tutor the night before",
+      "Only if I have not done enough revision"
+    ],
+    answer: 1,
+    emoji: "💭",
+    correctMsg: "You understand perfectly. Almost everyone feels 'not ready' before an exam — it is completely normal. But you MUST attend. Showing up is the most important step.",
+    wrongMsg: "Skipping is NOT an option. Feeling unprepared is completely normal — but you must still attend. You may well surprise yourself on the day.",
+  },
+  {
+    id: 11,
+    question: "Your classmate says they feel too nervous to sit the exam. What is the BEST advice you can give?",
+    info: null,
+    options: [
+      "Agree — nerves mean you are not ready",
+      "Speak to the tutor, and still go to the exam",
+      "Tell them to skip this one and try again next year",
+      "Say nothing — it is up to them"
+    ],
+    answer: 1,
+    emoji: "🤝",
+    correctMsg: "What a great friend! Nerves are completely normal before an exam. Talk to your tutor if you are struggling — but still show up. Courage is feeling scared and going anyway.",
+    wrongMsg: "The right answer: speak to your tutor and still attend. Nerves do not disqualify anyone. Being nervous shows you care — and you can absolutely do this.",
+  },
+  {
+    id: 13,
+    question: "When will you find out your GCSE Maths results?",
+    info: null,
+    options: ["The week after your last exam", "July — before the summer holidays", "20 August", "Your teacher will call you when they know"],
+    answer: 2,
+    emoji: "📬",
+    correctMsg: "That is right — Results Day is 20 August! Mark it in your calendar now. Until then, enjoy your summer. You will have done the hard part by showing up and sitting those exams. 🌟",
+    wrongMsg: "Your results will be released on 20 August — that is Results Day. Until then, relax and enjoy your summer. You will have earned a proper rest!",
+    motivation: "The wait can feel long — but every day that passes is one day closer to finding out how brilliantly you have done.",
+  },
+  {
+    id: 14,
+    question: "Will your teacher know your results BEFORE Results Day on 20 August?",
+    info: null,
+    options: [
+      "Yes — teachers always see results a few days early",
+      "Yes — if I ask my tutor they can find out for me",
+      "No — teachers do not see results before Results Day",
+      "Only the head teacher knows early"
+    ],
+    answer: 2,
+    emoji: "🤫",
+    correctMsg: "Correct! Your teacher does NOT see your results before Results Day. Everyone finds out on 20 August — your teacher, you, and your family all at the same time. No peeking from anyone!",
+    wrongMsg: "No — your teacher does not get early access to results. Everyone, including your tutor, finds out on 20 August. It is the same moment for all of you.",
+    motivation: "On 20 August, you and your teacher will discover your results together — and your tutor will be just as excited to hear how well you have done.",
+  },
+  {
+    id: 15,
+    question: "You are feeling really anxious about the exam. Should you panic?",
+    info: null,
+    options: [
+      "Yes — panic means I am not prepared enough",
+      "Yes — if I feel that anxious I probably should not go",
+      "No — nerves are completely normal and do not mean I will fail",
+      "Only if I have not slept well the night before"
+    ],
+    answer: 2,
+    emoji: "😤",
+    correctMsg: "Absolutely right! Feeling anxious before an exam is a sign that you care — and caring is a very good thing. Nerves give you energy and focus. Take a breath, walk in, and do your best. That is all anyone can ask. 💛",
+    wrongMsg: "No — do not panic! Anxiety before an exam is completely normal. Almost every student feels it, including the ones who do brilliantly. Nerves are your body helping you focus. Trust yourself and walk through that door.",
+    motivation: "Courage is not the absence of fear — it is deciding that your future matters more than the fear. You can do hard things.",
+  },
+  {
+    id: 16,
+    question: '"I have not revised enough — there is no point going to the exam." What is the truth?',
+    info: null,
+    options: [
+      "True — revision is everything, so if I have not done enough I should stay home",
+      "False — going is always better than not going. Some marks are better than none",
+      "It depends how much revision I have done",
+      "True — the examiner will be able to tell I have not revised"
+    ],
+    answer: 1,
+    emoji: "📚",
+    correctMsg: "Exactly right! Going to the exam — even feeling unprepared — is always the right choice. You know more than you think. Every mark you pick up is one you would not have if you stayed home. Go, write something, and give yourself a chance. 🙌",
+    wrongMsg: "Going is always better than not going. Even when you feel unprepared, you know more than you realise. Walking in gives you a chance. Staying home gives you zero. Always go.",
+    motivation: "You have been learning and absorbing maths all year — it is inside you, even when it does not feel like it. Show up and let it out.",
+  },
+];
+
+let current = 0;
+let selected = null;
+let checked = false;
+let userAnswers = {};
+
+function score() {
+  return Object.entries(userAnswers).filter(([id, ans]) => {
+    const q = questions.find(q => q.id === parseInt(id));
+    return q && ans === q.answer;
+  }).length;
+}
+
+function renderDatesInfo() {
+  return `<div style="overflow:hidden;border-radius:14px">
+    <table class="exam-table">
+      <thead><tr><th>Exam</th><th>Date</th><th>Time</th><th>Calculator?</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="exam-badge">Exam 1</span></td>
+          <td><strong>14 May</strong></td>
+          <td>9:30am</td>
+          <td><span class="calc-yes">✅ Yes</span></td>
+        </tr>
+        <tr>
+          <td><span class="exam-badge">Exam 2</span></td>
+          <td><strong>3 June</strong></td>
+          <td>9:30am</td>
+          <td><span class="calc-no">❌ No</span></td>
+        </tr>
+        <tr>
+          <td><span class="exam-badge">Exam 3</span></td>
+          <td><strong>10 June</strong></td>
+          <td>9:30am</td>
+          <td><span class="calc-yes">✅ Yes</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>`;
+}
+
+function renderParkingInfo() {
+  return `
+    <div class="info-row">
+      <div class="info-icon" style="background:#fde8ee">📍</div>
+      <div class="info-text">Venue: <strong>Exeter Castle</strong></div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon" style="background:#fde8ee">🚫</div>
+      <div class="info-text"><strong>There is NO parking at Exeter Castle.</strong><br>Plan your journey well in advance!</div>
+    </div>
+    <div class="info-row">
+      <div class="info-icon" style="background:#d4eeeb">✅</div>
+      <div class="info-text">Travel options: 🚌 bus &nbsp;·&nbsp; 🚂 train &nbsp;·&nbsp; 🚕 taxi &nbsp;·&nbsp; 🚶 walk</div>
+    </div>`;
+}
+
+function renderInfo(info) {
+  if (!info) return '';
+  let inner = '';
+  if (info.type === 'dates') inner = renderDatesInfo();
+  else if (info.type === 'parking') inner = renderParkingInfo();
+  return `<div class="info-block">${inner}</div>`;
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const pct = (current / questions.length) * 100;
+  const letters = ['A', 'B', 'C', 'D'];
+
+  const optionsHTML = q.options.map((opt, i) => {
+    let cls = 'opt';
+    if (checked) {
+      if (i === q.answer) cls += ' correct';
+      else if (i === selected) cls += ' wrong';
+    } else if (i === selected) cls += ' selected';
+    return `<button class="${cls}" data-i="${i}" ${checked ? 'disabled' : ''}>
+      <div class="opt-letter">${letters[i]}</div>
+      <span>${opt}</span>
+    </button>`;
+  }).join('');
+
+  let feedbackHTML = '';
+  if (checked) {
+    const isRight = selected === q.answer;
+    feedbackHTML = `<div class="feedback ${isRight ? 'correct' : 'wrong'}">
+      <div class="feedback-emoji">${isRight ? '🌟' : '💡'}</div>
+      <div>
+        <div class="feedback-title">${isRight ? 'Correct!' : 'Not quite!'}</div>
+        <div class="feedback-body">${isRight ? q.correctMsg : q.wrongMsg}</div>
+      </div>
+    </div>`;
+  }
+
+  const canCheck = selected !== null;
+  const btnHTML = !checked
+    ? `<div class="btn-row"><button class="btn-primary" id="btn-check" ${canCheck ? '' : 'disabled'}>Check my answer</button></div>`
+    : `<div class="btn-row"><button class="btn-gold" id="btn-next">${current + 1 < questions.length ? 'Next question &rarr;' : 'See my results 🎓'}</button></div>`;
+
+  document.getElementById('app').innerHTML = `
+    <div class="site-header">
+      <div><span class="ocr-badge"><span class="dot"></span> OCR &nbsp;·&nbsp; GCSE Maths <span class="dot"></span></span></div>
+      <h1>Maths Exam <em>Dates</em></h1>
+      <p class="subtitle">10 quick questions to make sure you know exactly what to expect this exam season. You've got this!</p>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-meta">
+        <span>Question ${current + 1} of ${questions.length}</span>
+        <span class="score-pill">⭐ ${score()} correct</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width:${pct}%"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-stripe"></div>
+      <div class="q-tag">${q.emoji} &nbsp; Question ${current + 1}</div>
+      <div class="question-text">${q.question}</div>
+      ${renderInfo(q.info)}
+      <div class="options">${optionsHTML}</div>
+      ${feedbackHTML}
+      ${q.motivation && !checked ? `<div class="motivation-banner"><div class="motivation-icon">💬</div><div class="motivation-quote">"${q.motivation}"</div></div>` : ''}
+      ${btnHTML}
+    </div>`;
+
+  document.querySelectorAll('.opt[data-i]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (checked) return;
+      selected = parseInt(btn.dataset.i);
+      renderQuestion();
+    });
+  });
+  const btnCheck = document.getElementById('btn-check');
+  if (btnCheck) btnCheck.addEventListener('click', () => {
+    if (selected === null) return;
+    userAnswers[q.id] = selected;
+    checked = true;
+    renderQuestion();
+  });
+  const btnNext = document.getElementById('btn-next');
+  if (btnNext) btnNext.addEventListener('click', () => {
+    current++; selected = null; checked = false;
+    if (current >= questions.length) renderResults();
+    else renderQuestion();
+  });
+}
+
+function renderResults() {
+  const s = score();
+  const total = questions.length;
+  const pct = Math.round((s / total) * 100);
+  const C = 2 * Math.PI * 56;
+  const offset = C - (pct / 100) * C;
+  const ringColor = pct >= 80 ? '#2a7d72' : pct >= 60 ? '#d4892a' : '#c94f6d';
+  const emoji = pct === 100 ? '🏆' : pct >= 80 ? '⭐' : pct >= 60 ? '👍' : '💪';
+  const title = pct === 100 ? 'Perfect score!' : pct >= 80 ? 'Excellent work!' : pct >= 60 ? 'Good effort!' : 'Keep going!';
+  const sub = pct === 100
+    ? "You know your exam details inside out. Now go show that examiner what you can do!"
+    : pct >= 80
+    ? "You are well prepared. Review anything you missed and you will be fully ready."
+    : "Review the key facts below. Knowing this information will help you feel more confident on exam day.";
+
+  const reviewHTML = questions.map(q => {
+    const ua = userAnswers[q.id];
+    const ok = ua === q.answer;
+    return `<div class="review-item ${ok ? 'ok' : 'fail'}">
+      <span class="review-icon">${ok ? '✅' : '❌'}</span>
+      <span>Q${q.id}: ${q.question.slice(0, 60)}${q.question.length > 60 ? '…' : ''}</span>
+    </div>`;
+  }).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="site-header">
+      <div><span class="ocr-badge"><span class="dot"></span> OCR &nbsp;·&nbsp; GCSE Maths <span class="dot"></span></span></div>
+      <h1>Your <em>Results</em></h1>
+    </div>
+    <div class="results-card">
+      <div class="results-emoji">${emoji}</div>
+      <div class="results-title">${title}</div>
+      <div class="results-subtitle" style="margin-bottom:28px">${sub}</div>
+      <div class="score-ring-wrap">
+        <div class="score-ring">
+          <svg width="155" height="155" viewBox="0 0 124 124">
+            <circle cx="62" cy="62" r="56" fill="none" stroke="#f0eaf8" stroke-width="10"/>
+            <circle cx="62" cy="62" r="56" fill="none" stroke="${ringColor}" stroke-width="10"
+              stroke-dasharray="${C.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+              stroke-linecap="round" style="transition:stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1)"/>
+          </svg>
+          <div class="score-ring-text">
+            <div class="score-ring-num">${s}/${total}</div>
+            <div class="score-ring-label">${pct}%</div>
+          </div>
+        </div>
+      </div>
+      <div class="cheatsheet">
+        <div class="cheatsheet-title">📌 Your Exam Cheat Sheet — Pin This Up!</div>
+        <div class="cheat-row">
+          <div class="cheat-icon" style="background:#e8e0ff">🏫</div>
+          <div><div class="cheat-label">Exam board</div><div class="cheat-value">OCR — Oxford, Cambridge and RSA</div></div>
+        </div>
+        <div class="cheat-row">
+          <div class="cheat-icon" style="background:var(--gold-pale)">📅</div>
+          <div>
+            <div class="cheat-label">Exam dates</div>
+            <div class="cheat-value">
+              🧮 <strong>14 May</strong> — Exam 1 (calculator) &nbsp;·&nbsp;
+              ❌ <strong>3 June</strong> — Exam 2 (no calculator) &nbsp;·&nbsp;
+              🧮 <strong>10 June</strong> — Exam 3 (calculator)
+            </div>
+          </div>
+        </div>
+        <div class="cheat-row">
+          <div class="cheat-icon" style="background:var(--gold-pale)">⏰</div>
+          <div><div class="cheat-label">Start time — all exams</div><div class="cheat-value">9:30am — arrive by <strong>9:00am</strong>. Invigilators take students in at <strong>9:15am</strong>.</div></div>
+        </div>
+        <div class="cheat-row">
+          <div class="cheat-icon" style="background:#fde8ee">🚫</div>
+          <div>
+            <div class="cheat-label">Option to miss an exam?</div>
+            <div class="cheat-value">
+              <span style="color:#8b0000;font-weight:900;font-size:17px;letter-spacing:0.5px">NO OPTION TO NOT TURN UP.</span><br>
+              <span style="font-size:14px;font-weight:500;color:#5a3a3a">Headache, nerves, feeling unprepared — none of these are reasons to miss your exam. You must attend all three.</span>
+            </div>
+          </div>
+        </div>
+        <div class="cheat-row">
+          <div class="cheat-icon" style="background:var(--teal-pale)">📬</div>
+          <div><div class="cheat-label">Results Day</div><div class="cheat-value">20 August — everyone finds out on the same day, including your teacher!</div></div>
+        </div>
+        <div class="cheat-row">
+          <div class="cheat-icon" style="background:var(--purple-pale)">🌟</div>
+          <div><div class="cheat-label">Remember</div><div class="cheat-value">You know more than you think. Showing up is the bravest and most important thing you can do.</div></div>
+        </div>
+      </div>
+      <div class="review-list">${reviewHTML}</div>
+      <div class="motivation-banner" style="text-align:left;margin-bottom:20px">
+        <div class="motivation-icon">🌟</div>
+        <div class="motivation-quote">"You chose to come back to education as an adult. That takes real courage. Whatever happens on exam day, you have already shown something remarkable about yourself. Now go finish what you started."</div>
+      </div>
+      <button class="btn-gold" id="btn-restart" style="width:100%">🔄 Try again</button>
+    </div>`;
+
+  document.getElementById('btn-restart').addEventListener('click', () => {
+    current = 0; selected = null; checked = false; userAnswers = {};
+    renderQuestion();
+  });
+}
+
+renderQuestion();
+</script>
+</body>
+</html>
